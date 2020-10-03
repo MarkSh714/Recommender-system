@@ -19,7 +19,7 @@ config.gpu_options.allow_growth = True
 session = InteractiveSession(config=config)
 
 epochs = 500
-batch_size = 2048
+batch_size = 128
 learningrate = 0.001
 nadam_b1 = 0.9
 nadam_b2 = 0.999
@@ -36,11 +36,21 @@ def lr_model(x_size):
     return (t_model)
 
 
+def lr_second_data(data):
+    columns = list(data.columns)
+    for i in range(len(columns) - 1):
+        for j in range(i + 1, len(columns)):
+            tmp = data[columns[i]] * data[columns[j]]
+            if sum(tmp) / len(data) > 0.01:
+                data[str(i) + '_' + str(j)] = tmp
+    return data
+
+
 if __name__ == '__main__':
-    data = pd.read_csv('data/processed_sample_train.csv', index_col=0)
-    data = data.sample(200000)
+    data = pd.read_csv('data/demo_train.csv', index_col=0)
     target = data['click']
     del data['click']
+    data = lr_second_data(data)
     X_train, X_test, y_train, y_test = train_test_split(data, target, test_size=0.3, random_state=0)
     model = lr_model(len(X_train.columns))
     history = model.fit(X_train, y_train,
@@ -49,4 +59,4 @@ if __name__ == '__main__':
                         shuffle=True,
                         verbose=2,
                         validation_data=(X_test, y_test))
-    print(1)
+    # print(1)
