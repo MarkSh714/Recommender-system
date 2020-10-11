@@ -2,19 +2,23 @@ import pandas as pd
 import numpy as np
 import collections
 
+# 读取动画评分数据，并减少数据量
 anime = pd.read_csv('data/anime.csv')
 rating = pd.read_csv('data/rating.csv')
-rating = rating.iloc[:len(rating) // 10]
+rating = rating.iloc[:len(rating) // 20]
 rating = rating.sort_values(by='anime_id')
-rating = rating.iloc[:len(rating) // 10]
+rating = rating.iloc[:len(rating) // 5]
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
+anime_rating_mean = rating[rating['rating'] != -1].groupby('anime_id')['rating'].mean()
+rating = rating[rating.anime_id.isin(list(anime_rating_mean.index))]
 anime_id = rating['anime_id'].unique()
 user_id = rating['user_id'].unique()
 user_id_dict = dict(zip(user_id, [i for i in range(len(user_id))]))
 anime_id_dict = dict(zip(anime_id, [i for i in range(len(anime_id))]))
 rating['user_id_2'] = rating['user_id'].apply(lambda x: user_id_dict[x])
 rating['anime_id_2'] = rating['anime_id'].apply(lambda x: anime_id_dict[x])
-pd.set_option('display.max_columns', None)
-pd.set_option('display.max_rows', None)
+rating['rating'] = rating.apply(lambda x: x.rating if x.rating != -1 else anime_rating_mean[x.anime_id], axis=1)
 
 
 def user_cf(K):
@@ -84,4 +88,33 @@ def item_cf(K):
     print(pd.merge(recommender_items, anime, how='left', on='anime_id'))
 
 
-item_cf(10)
+def loss(p, q, train, beta):
+    res = 0
+    for i in range(len(p)):
+        res += beta * np.dot(p[i, :], p[i, :])
+    for i in range(len(q)):
+        res += beta * np.dot(q[i, :], q[i, :])
+    for i in range(len(train)):
+        r = train[i][0]
+        pi = p[int(train[i][1]), :]
+        qi = q[int(train[i][2]), :]
+        res += (r - np.dot(pi, qi)) ** 2
+    return res
+
+
+def lfm(alpha, beta, k, epochs):
+    p = np.random.random(size=(len(user_id), k))
+    q = np.random.random(size=(len(anime_id), k))
+    train = rating[['rating', 'user_id_2', 'anime_id_2']].values
+    n = len(train)
+    for epoch in range(epochs):
+        print("epoch {0} loss: {1}".format(epoch, loss(p, q, train, beta)))
+        for i in range(len(train)):
+            r = train[i][0]
+            pi = p[int(train[i][1]), :]
+            qi = q[int(train[i][2]), :]
+            p[int(train[i][1]), :] = pi - alpha * (-2 * (r - np.dot(pi, qi)) * qi + 2 * beta * pi) / n
+            q[int(train[i][2]), :] = qi - alpha * (-2 * (r - np.dot(pi, qi)) * pi + 2 * beta * qi) / n
+
+
+lfm(0.1, 0.1, 20, 1000)
