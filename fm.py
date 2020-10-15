@@ -13,6 +13,7 @@ from sklearn.model_selection import train_test_split
 from tensorflow import keras
 from tensorflow.compat.v1 import ConfigProto
 from tensorflow.compat.v1 import InteractiveSession
+import numpy as np
 
 config = ConfigProto()
 config.gpu_options.allow_growth = True
@@ -44,6 +45,19 @@ def lr_second_data(data):
             if sum(tmp) / len(data) > 0.01:
                 data[str(i) + '_' + str(j)] = tmp
     return data
+
+
+class FM(object):
+    def __inif__(self, k, train, target):
+        n = len(train.shape[1])
+        self.w0 = np.random.random(size=(1, 1))
+        self.w1 = np.random.random(size=(n, 1))
+        self.v = np.random.random(size=(n, k))
+        self.train = train
+        self.target = target
+
+    def train(self):
+        pass
 
 
 if __name__ == '__main__':

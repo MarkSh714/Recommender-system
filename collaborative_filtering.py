@@ -5,9 +5,9 @@ import collections
 # 读取动画评分数据，并减少数据量
 anime = pd.read_csv('data/anime.csv')
 rating = pd.read_csv('data/rating.csv')
-rating = rating.iloc[:len(rating) // 20]
+rating = rating.iloc[:len(rating) // 3]
 rating = rating.sort_values(by='anime_id')
-rating = rating.iloc[:len(rating) // 5]
+rating = rating.iloc[:len(rating) // 3]
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 anime_rating_mean = rating[rating['rating'] != -1].groupby('anime_id')['rating'].mean()
@@ -90,25 +90,29 @@ def item_cf(K):
 
 def loss(p, q, train, beta):
     res = 0
-    for i in range(len(p)):
-        res += beta * np.dot(p[i, :], p[i, :])
-    for i in range(len(q)):
-        res += beta * np.dot(q[i, :], q[i, :])
+    n = len(train)
+    # for i in range(len(p)):
+    #     res += beta * np.dot(p[i, :], p[i, :])
+    # for i in range(len(q)):
+    #     res += beta * np.dot(q[i, :], q[i, :])
     for i in range(len(train)):
         r = train[i][0]
         pi = p[int(train[i][1]), :]
         qi = q[int(train[i][2]), :]
-        res += (r - np.dot(pi, qi)) ** 2
+        res += ((r - np.dot(pi, qi)) ** 2) / n
     return res
 
 
 def lfm(alpha, beta, k, epochs):
     p = np.random.random(size=(len(user_id), k))
     q = np.random.random(size=(len(anime_id), k))
-    train = rating[['rating', 'user_id_2', 'anime_id_2']].values
+    data = rating[['rating', 'user_id_2', 'anime_id_2']].sample(frac=1, random_state=0)
+    train = data.iloc[:int(len(data) ** 0.7)].values
+    test = data.iloc[int(len(data) ** 0.7):].values
     n = len(train)
     for epoch in range(epochs):
-        print("epoch {0} loss: {1}".format(epoch, loss(p, q, train, beta)))
+        print(
+            "epoch {0}  train loss: {1}; test loss {2}".format(epoch, loss(p, q, train, beta), loss(p, q, test, beta)))
         for i in range(len(train)):
             r = train[i][0]
             pi = p[int(train[i][1]), :]
@@ -117,4 +121,4 @@ def lfm(alpha, beta, k, epochs):
             q[int(train[i][2]), :] = qi - alpha * (-2 * (r - np.dot(pi, qi)) * pi + 2 * beta * qi) / n
 
 
-lfm(0.1, 0.1, 20, 1000)
+lfm(0.1, 0.1, 40, 10000)
