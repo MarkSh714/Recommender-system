@@ -1,14 +1,4 @@
 import pandas as pd
-# import tensorflow as tf
-# from tensorflow.keras import metrics
-# from tensorflow.keras import regularizers
-# from tensorflow.keras.models import Sequential
-# from tensorflow.keras.layers import Dense, Dropout, Flatten, Activation
-# from tensorflow.keras.layers import Conv2D, MaxPooling2D
-# from tensorflow.keras.optimizers import Adam, Nadam, RMSprop, SGD
-# from tensorflow.keras.callbacks import TensorBoard, EarlyStopping, ModelCheckpoint
-# from tensorflow.keras.utils import plot_model
-# from tensorflow.keras.models import load_model
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import log_loss
 import numpy as np

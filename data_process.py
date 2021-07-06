@@ -1,15 +1,17 @@
 import pandas as pd
 from datetime import datetime
 
-def sample_data():
+
+def sample_data(saved_name):
     data = pd.read_csv('data/train.csv', chunksize=100000)
     res = pd.DataFrame()
     for i in data:
-        res = res.append(i.sample(n=5000, random_state=0))
-    res.reset_index(drop=True).to_csv('data/sample_train.csv')
+        res = res.append(i.sample(n=20000, random_state=0))
+    res.reset_index(drop=True).to_csv(f'data/{saved_name}.csv')
 
-def process_data():
-    data = pd.read_csv('data/sample_train.csv', index_col=0)
+
+def process_data(saved_name):
+    data = pd.read_csv(f'data/{saved_name}.csv')
     del data['id']
     dummy_col = ['device_id', 'C1', 'banner_pos', 'site_id', 'site_domain', 'site_category', 'app_id', 'app_category',
                  'app_domain', 'device_model', 'device_type', 'device_conn_type', 'C14', 'C15', 'C16', 'C18', 'C19',
@@ -49,8 +51,13 @@ def process_data():
     for col in dummy_col:
         data = pd.concat([data, pd.get_dummies(data[col], prefix=col)], axis=1)
         del data[col]
-    data.to_csv('data/processed_sample_train.csv')
+    data.to_csv(f'data/processed_{saved_name}.csv')
+
+
+def main(saved_name):
+    sample_data(saved_name)
+    process_data(saved_name)
 
 
 if __name__ == '__main__':
-    print(1)
+    main('sample_train')

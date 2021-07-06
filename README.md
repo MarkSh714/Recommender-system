@@ -6,4 +6,4 @@
 ### CTR点击率预估
 数据集采用kaggle的ctr数据集(https://www.kaggle.com/c/avazu-ctr-prediction/data)
 ######
-已实现了LR算法。
+已实现了LR算法、FM算法、DeepFM算法。
